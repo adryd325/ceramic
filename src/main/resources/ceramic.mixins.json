@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.adryd.ceramic.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "mixins": [
+    "DamageSourceMixin",
+    "DedicatedPlayerManagerMixin",
+    "EnchantCommandMixin",
+    "FarmlandBlockMixin",
+    "MinecraftServerMixin",
+    "NoteBlockMixin",
+    "PlayerManagerAccessor",
+    "PlayerManagerMixin",
+    "ServerPlayNetworkHandlerMixin",
+    "TurtleEggBlockMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

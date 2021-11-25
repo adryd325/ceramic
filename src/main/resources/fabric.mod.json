@@ -1,38 +1,36 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "ceramic",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "ceramic",
+  "description": "A carpet extension providing various serverside tweaks meant for my personal creative server.",
   "authors": [
-    "Me!"
+    "adryd",
+    "NotNite"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://github.com/adryd325/ceramic",
+    "sources": "https://github.com/adryd325/ceramic"
   },
 
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
+  "license": "MIT",
+  "icon": "assets/ceramic/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "com.adryd.ceramic.Ceramic"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "ceramic.mixins.json"
   ],
 
   "depends": {
     "fabricloader": ">=0.11.3",
-    "fabric": "*",
     "minecraft": "1.17.x",
-    "java": ">=16"
-  },
-  "suggests": {
-    "another-mod": "*"
+    "java": ">=16",
+    "carpet": ">=1.4.54"
   }
 }
