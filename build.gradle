@@ -34,10 +34,12 @@ dependencies {
 }
 
 processResources {
-	inputs.property "version", project.version
+	inputs.property "version", version
+	inputs.property "depends.minecraft", project.minecraft_compat
 
 	filesMatching("fabric.mod.json") {
-		expand "version": project.version
+		expand "version": version
+		expand "minecraft_compat": project.minecraft_compat
 	}
 }
 

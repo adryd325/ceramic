@@ -1,59 +1,62 @@
 package com.adryd.ceramic.command;
 
+import carpet.script.language.Sys;
 import carpet.settings.SettingsManager;
 import com.adryd.ceramic.CeramicSettings;
+import com.adryd.ceramic.mixin.SpawnLocatingAccessor;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.SideShapeType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.tag.BlockTags;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Random;
 
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class HomeCommand {
-    private static boolean isSpawnable(ServerWorld world, BlockPos pos) {
-        BlockState blockState = world.getBlockState(pos);
-        Block block = blockState.getBlock();
-        boolean canMobSpawnInside = block.canMobSpawnInside();
-        boolean canMobSpawnAbove = world.getBlockState(pos.up()).getBlock().canMobSpawnInside();
-        boolean isSolidBelow = world.getBlockState(pos.down()).isSideSolid(world, pos.down(), Direction.DOWN, SideShapeType.FULL);
-        return canMobSpawnInside && canMobSpawnAbove && isSolidBelow;
+    private static int calculateSpawnOffsetMultiplier(int horizontalSpawnArea) {
+        return horizontalSpawnArea <= 16 ? horizontalSpawnArea - 1 : 17;
     }
 
-    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        LiteralArgumentBuilder<ServerCommandSource> command = literal("home")
-                .requires((player) -> SettingsManager.canUseCommand(player, CeramicSettings.commandHome))
-                .executes((context) -> execute(context.getSource()));
-        dispatcher.register(command);
+    private static void teleport(ServerPlayerEntity player, ServerWorld targetWorld, double x, double y, double z, float yaw, float pitch) {
+        ChunkPos chunkPos = new ChunkPos(new BlockPos(x, y, z));
+        targetWorld.getChunkManager().addTicket(ChunkTicketType.POST_TELEPORT, chunkPos, 1, player.getId());
+        player.stopRiding();
+        if (player.isSleeping()) {
+            player.wakeUp(true, true);
+        }
+        if (targetWorld == player.world) {
+            player.networkHandler.requestTeleport(x, y, z, yaw, pitch, EnumSet.noneOf(PlayerPositionLookS2CPacket.Flag.class));
+        } else {
+            player.teleport(targetWorld, x, y, z, yaw, pitch);
+        }
+        player.setHeadYaw(yaw);
     }
 
-    public static int execute(ServerCommandSource source) throws CommandSyntaxException {
-        MinecraftServer server = source.getServer();
-        ServerPlayerEntity player = source.getPlayer();
-
+    private static boolean teleportHome(MinecraftServer server, ServerPlayerEntity player) {
         // So funny enough, there's not any simple function to, find the players spawn position
         // Guess we'll do it ourselves
         ServerWorld playerSpawnWorld = server.getWorld(player.getSpawnPointDimension());
         float playerSpawnAngle = player.getSpawnAngle();
-        boolean playerSpawnSet = player.isSpawnPointSet();
+        boolean playerSpawnSet = player.isSpawnForced();
         BlockPos playerSpawnPosition = player.getSpawnPointPosition();
 
-        boolean success = false;
         if (playerSpawnPosition != null) {
             assert playerSpawnWorld != null;
             Optional<Vec3d> playerSuggestedRespawnPosition = PlayerEntity.findRespawnPosition(playerSpawnWorld, playerSpawnPosition, playerSpawnAngle, playerSpawnSet, true);
@@ -72,45 +75,70 @@ public class HomeCommand {
                 }
 
                 // Finally, teleport
-                player.teleport(playerSpawnWorld, playerRespawnPosition.getX(), playerRespawnPosition.getY(), playerRespawnPosition.getZ(), yaw, 0);
-                success = true;
+                teleport(player, playerSpawnWorld, playerRespawnPosition.getX(), playerRespawnPosition.getY(), playerRespawnPosition.getZ(), yaw, 0);
+                return true;
             }
         }
-        if (!success) {
-            // If we don't have a bed
-            ServerWorld spawnWorld = server.getOverworld();
-            BlockPos spawnPosition = spawnWorld.getSpawnPos();
-            float spawnAngle = spawnWorld.getSpawnAngle();
+        return false;
+    }
 
-            // Find spawnable space above
-            BlockPos safePosition = spawnPosition;
-            while (!spawnWorld.isOutOfHeightLimit(safePosition)) {
-                if (isSpawnable(spawnWorld, safePosition)) {
-                    player.teleport(spawnWorld, safePosition.getX() + 0.5D, safePosition.getY() + 0.1D, safePosition.getZ() + 0.5D, spawnAngle, 0);
-                    success = true;
-                    break;
-                }
-                safePosition = safePosition.up();
-            }
-            if (!success) {
-                // Find spawnable space below
-                // Someone please optimize this im lazy af
-                safePosition = spawnPosition;
-                while (!spawnWorld.isOutOfHeightLimit(safePosition)) {
-                    if (isSpawnable(spawnWorld, safePosition)) {
-                        player.teleport(spawnWorld, safePosition.getX() + 0.5D, safePosition.getY() + 0.1D, safePosition.getZ() + 0.5D, spawnAngle, 0);
-                        success = true;
-                        break;
-                    }
-                    safePosition = safePosition.down();
+    private static void teleportSpawn(MinecraftServer server, ServerPlayerEntity player) {
+        // Can we use the vanilla function?
+        // No We Can't! because it doesn't set teleportation state or send teleport packet
+        // a (bad) copy of vanilla code
+        ServerWorld world = server.getOverworld();
+        BlockPos blockPos = world.getSpawnPos();
+        int spawnRadius = Math.max(0, server.getSpawnRadius(world));
+        int worldBorderDistance = MathHelper.floor(world.getWorldBorder().getDistanceInsideBorder(blockPos.getX(), blockPos.getZ()));
+        if (worldBorderDistance < spawnRadius) {
+            spawnRadius = worldBorderDistance;
+        }
+        if (worldBorderDistance <= 1) {
+            spawnRadius = 1;
+        }
+
+        // If spawn radius times 2 + 1 squared is over the max int
+        // horizontalSpawnArea = max int
+        // else
+        // horizontalSpawnArea = (spawnRadius*2+1)**2
+        long l = spawnRadius * 2L + 1;
+        long spawnAreaUnsafe = l * l;
+        int horizontalSpawnArea = spawnAreaUnsafe > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) spawnAreaUnsafe;
+        int spawnOffsetMultiplier = calculateSpawnOffsetMultiplier(horizontalSpawnArea);
+        int o = new Random().nextInt(horizontalSpawnArea);
+        for (int iterator = 0; iterator < horizontalSpawnArea; ++iterator) {
+            int q = (o + spawnOffsetMultiplier * iterator) % horizontalSpawnArea;
+            int r = q % (spawnRadius * 2 + 1);
+            int s = q / (spawnRadius * 2 + 1);
+            BlockPos blockPos2 = SpawnLocatingAccessor.accessOverworldSpawn(world, blockPos.getX() + r - spawnRadius, blockPos.getZ() + s - spawnRadius);
+            if (blockPos2 != null) {
+                teleport(player, world, blockPos2.getX() + 0.5, blockPos2.getY(), blockPos2.getZ() + 0.5, 0.0f, 0.0f);
+                player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
+                if (world.isSpaceEmpty(player)) {
+                    return;
                 }
             }
         }
-        if (success) {
-            source.sendFeedback(new LiteralText("Teleported to your spawn point!"), false);
-        } else {
-            source.sendError(new LiteralText("Could not find suitable spawn position"));
+        player.teleport(world,blockPos.getX() + 0.5, blockPos.getY(), blockPos.getZ() + 0.5, 0.0F, 0.0F);
+    }
+
+    public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+        LiteralArgumentBuilder<ServerCommandSource> command = literal("home")
+                .requires((player) -> SettingsManager.canUseCommand(player, CeramicSettings.commandHome))
+                .executes((context) -> execute(context.getSource()));
+        dispatcher.register(command);
+    }
+
+    public static int execute(ServerCommandSource source) throws CommandSyntaxException {
+        MinecraftServer server = source.getServer();
+        ServerPlayerEntity player = source.getPlayer();
+
+        // yeah, i mean, it works
+        if (!teleportHome(server, player)) {
+            teleportSpawn(server, player);
         }
-        return success ? 1 : 0;
+
+        source.sendFeedback(new LiteralText("Teleported you home!"), false);
+        return 1;
     }
 }

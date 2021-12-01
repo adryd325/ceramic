@@ -13,6 +13,7 @@
     "PlayerManagerAccessor",
     "PlayerManagerMixin",
     "ServerPlayNetworkHandlerMixin",
+    "SpawnLocatingAccessor",
     "TurtleEggBlockMixin"
   ],
   "client": [
