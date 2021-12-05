@@ -16,6 +16,9 @@ public class CeramicSettings {
     @Rule(desc = "Enable whitelist when all OPs are offline", category = {ADMINISTRATION})
     public static boolean opsMonitorWhitelist = false;
 
+    @Rule(desc = "(cursed impl) Always re-download server resource pack", category = {ADMINISTRATION})
+    public static boolean alwaysRefreshResourcePack = false;
+
     @Rule(desc = "Hide server brand", category = {ADMINISTRATION})
     public static boolean hideServerBrand = false;
 
