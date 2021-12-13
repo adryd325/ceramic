@@ -5,10 +5,12 @@
   "compatibilityLevel": "JAVA_16",
   "mixins": [
     "DamageSourceMixin",
+    "DebugInfoSenderMixin",
     "DedicatedPlayerManagerMixin",
     "EnchantCommandMixin",
     "FarmlandBlockMixin",
     "MinecraftServerMixin",
+    "MixinPath",
     "NoteBlockMixin",
     "PlayerManagerAccessor",
     "PlayerManagerMixin",

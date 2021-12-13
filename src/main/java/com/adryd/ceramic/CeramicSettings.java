@@ -51,4 +51,10 @@ public class CeramicSettings {
 
     @Rule(desc = "Disable enchant command restrictions (TIS Additions port)", category = {TIS_ADDITIONS})
     public static boolean enchantCommandDisableRestrictions = false;
+
+    @Rule(desc = "Send server debug info", category = {CREATIVE})
+    public static boolean sendServerDebugInfo = false;
+
+    @Rule(desc = "Send server debug info distance", category = {CREATIVE})
+    public static double sendServerDebugInfoDistance = 256.0;
 }
