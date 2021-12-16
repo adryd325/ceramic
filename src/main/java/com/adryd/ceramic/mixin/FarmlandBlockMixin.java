@@ -12,7 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(FarmlandBlock.class)
+// priority 1001 to cancel before some other mods that cancel if you have feather falling
+@Mixin(value = FarmlandBlock.class, priority = 1001)
 public abstract class FarmlandBlockMixin extends Block {
     // Learned this trick from https://github.com/unascribed/Fabrication/blob/1.17/src/main/java/com/unascribed/fabrication/mixin/c_tweaks/no_trample/MixinFarmBlock.java
     public FarmlandBlockMixin(Settings settings) {
