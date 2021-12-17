@@ -2,6 +2,9 @@ package com.adryd.ceramic.mixin;
 
 import com.adryd.ceramic.CeramicSettings;
 import io.netty.buffer.Unpooled;
+import net.minecraft.block.entity.BeehiveBlockEntity;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.render.debug.BeeDebugRenderer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
@@ -216,5 +219,20 @@ public abstract class DebugInfoSenderMixin {
 
     @Inject(method = "sendBeeDebugData", at = @At("HEAD"), cancellable = true)
     private static void sendBeehiveDebugData(BeeEntity bee, CallbackInfo ci) {
+//        // Not ready yet
+//        World world = bee.getWorld();
+//        BlockEntity blockEntity = world.getBlockEntity(bee.getHivePos());
+//        if (CeramicSettings.sendServerDebugInfo && world instanceof ServerWorld && blockEntity instanceof BeehiveBlockEntity) {
+//            BeehiveBlockEntity hive = (BeehiveBlockEntity) blockEntity;
+//            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+//            buf.writeBlockPos(hive.getPos());
+//            // This is not vanilla behavior but I don't know where to get the name for a hive
+//            buf.writeString(hive.getPos().toString());
+//            buf.writeInt(hive.getBeeCount());
+//            buf.writeInt(BeehiveBlockEntity.getHoneyLevel(hive.getCachedState()));
+//            buf.writeBoolean(hive.isSmoked());
+//            sendToNearby((ServerWorld) world, buf, DEBUG_BEE, bee.getHivePos());
+//            ci.cancel();
+//        }
     }
 }

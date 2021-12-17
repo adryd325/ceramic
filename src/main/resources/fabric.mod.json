@@ -2,7 +2,6 @@
   "schemaVersion": 1,
   "id": "ceramic",
   "version": "${version}",
-
   "name": "ceramic",
   "description": "A carpet extension providing various serverside tweaks meant for my personal creative server.",
   "authors": [
@@ -13,12 +12,13 @@
     "homepage": "https://github.com/adryd325/ceramic",
     "sources": "https://github.com/adryd325/ceramic"
   },
-
   "license": "MIT",
   "icon": "assets/ceramic/icon.png",
-
   "environment": "*",
   "entrypoints": {
+    "preLaunch": [
+      "com.adryd.ceramic.CeramicPreLaunch"
+    ],
     "main": [
       "com.adryd.ceramic.Ceramic"
     ]
@@ -26,7 +26,6 @@
   "mixins": [
     "ceramic.mixins.json"
   ],
-
   "depends": {
     "fabricloader": ">=0.11.3",
     "minecraft": "1.18.x",

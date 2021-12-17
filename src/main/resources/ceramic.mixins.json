@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.adryd.ceramic.mixin",
-  "compatibilityLevel": "JAVA_16",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
     "DamageSourceMixin",
     "DebugInfoSenderMixin",
@@ -11,6 +11,7 @@
     "FarmlandBlockMixin",
     "MinecraftServerMixin",
     "MixinPath",
+    "MixinStringReader_brigadier",
     "NoteBlockMixin",
     "PlayerManagerAccessor",
     "PlayerManagerMixin",

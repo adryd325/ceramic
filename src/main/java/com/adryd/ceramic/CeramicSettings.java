@@ -57,4 +57,8 @@ public class CeramicSettings {
 
     @Rule(desc = "Send server debug info distance", category = {CREATIVE})
     public static double sendServerDebugInfoDistance = 256.0;
+
+    // By mstrodl
+    @Rule(desc = "A backport of brigadier#90. Makes stringified NBTs support more JSON-like string escapes", category = {CREATIVE})
+    public static boolean allowBrigadierStringEscapes = false;
 }
