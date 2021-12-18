@@ -7,6 +7,7 @@ import net.fabricmc.loader.impl.util.UrlUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class CeramicPreLaunch implements PreLaunchEntrypoint {
@@ -25,7 +26,7 @@ public class CeramicPreLaunch implements PreLaunchEntrypoint {
             for (String mixinTarget : libraryMixinTargets) {
                 m.invoke(classLoader, getSource(classLoader.getParent().getParent().getParent(), mixinTarget).orElseThrow());
             }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchElementException e) {
             e.printStackTrace();
         }
     }
