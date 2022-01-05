@@ -2,15 +2,16 @@ package com.adryd.ceramic.mixin;
 
 import com.adryd.ceramic.CeramicSettings;
 import io.netty.buffer.Unpooled;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BeehiveBlockEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.render.debug.BeeDebugRenderer;
+import net.minecraft.client.render.debug.NameGenerator;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.passive.BeeEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
 import net.minecraft.server.network.DebugInfoSender;
@@ -20,12 +21,18 @@ import net.minecraft.structure.StructurePiece;
 import net.minecraft.structure.StructureStart;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.village.raid.Raid;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.event.BlockPositionSource;
 import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.event.PositionSource;
+import net.minecraft.world.event.PositionSourceType;
 import net.minecraft.world.event.listener.GameEventListener;
+import org.apache.logging.log4j.core.jmx.Server;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -41,13 +48,15 @@ import static net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket.*;
 @Mixin(DebugInfoSender.class)
 public abstract class DebugInfoSenderMixin {
     @Shadow
-    private static void sendToAll(ServerWorld world, PacketByteBuf buf, Identifier channel) {
+    private static void sendToAll(ServerWorld world, PacketByteBuf buf, Identifier channel) {}
+
+    @Shadow
+    private static List<String> listMemories(LivingEntity entity, long currentTime) {
         throw new AssertionError();
     }
 
-    @Shadow private static List<String> listMemories(LivingEntity entity, long currentTime) {
-        throw new AssertionError();
-    }
+    @Shadow
+    private static void writeBrain(LivingEntity entity, PacketByteBuf buf) {}
 
     @Unique
     private static void sendToNearby(ServerWorld world, PacketByteBuf buf, Identifier channel, BlockPos pos) {
@@ -59,30 +68,56 @@ public abstract class DebugInfoSenderMixin {
         }
     }
 
-    @Unique
-    private static void sendPoi(ServerWorld world, BlockPos pos, Identifier identifier) {
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        buf.writeBlockPos(pos);
-        sendToNearby(world, buf, identifier, pos);
+    @Inject(method = "sendChunkWatchingChange", at=@At("TAIL"))
+    private static void sendPoiPacketsForChunk(ServerWorld world, ChunkPos pos, CallbackInfo ci) {
+        // I guess iterate over the chunk and look for POIs??
     }
 
-    @Inject(method = "sendPoiAddition", at = @At("HEAD"), cancellable = true)
+
+
+    @Inject(method = "sendPoiAddition", at = @At("TAIL"))
     private static void sendPoiAddition(ServerWorld world, BlockPos pos, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
-            sendPoi(world, pos, DEBUG_POI_ADDED);
-            ci.cancel();
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeBlockPos(pos); // pos
+            buf.writeString(pos.toString()); // unknown
+            buf.writeInt(world.getPointOfInterestStorage().getFreeTickets(pos)); // freeTicketCount
+            sendToNearby(world, buf, DEBUG_POI_ADDED, pos);
         }
     }
 
-    @Inject(method = "sendPoiRemoval", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendPointOfInterest", at = @At("TAIL"))
+    private static void sendPoiTicketCount(ServerWorld world, BlockPos pos, CallbackInfo ci) {
+        if (CeramicSettings.sendServerDebugInfo) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeBlockPos(pos); // pos
+            buf.writeInt(world.getPointOfInterestStorage().getFreeTickets(pos)); // freeTicketCount
+            sendToNearby(world, buf, DEBUG_POI_TICKET_COUNT, pos); // is this the right channel?
+        }
+    }
+
+    @Inject(method = "sendPoiRemoval", at = @At("TAIL"))
     private static void sendPoiRemoval(ServerWorld world, BlockPos pos, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
-            sendPoi(world, pos, DEBUG_POI_REMOVED);
-            ci.cancel();
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeBlockPos(pos);
+            sendToNearby(world, buf, DEBUG_POI_REMOVED, pos);
         }
     }
 
-    @Inject(method = "sendPathfindingData", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendPoi", at=@At("TAIL"))
+    private static void sendVillageSections(ServerWorld world, BlockPos pos, CallbackInfo ci) {
+        if (CeramicSettings.sendServerDebugInfo) {
+            // PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            // buf.writeInt(); // sectionsAdded;
+            // for sectionsAdded writeChunkSectionPos
+            // buf.writeInt(); // sectionsRemoved
+            // for sectionsRemoved writeChunkSectionPos
+            // sendToNearby(world, buf, DEBUG_VILLAGE_SECTIONS, pos);
+        }
+    }
+
+    @Inject(method = "sendPathfindingData", at = @At("TAIL"))
     private static void sendPathfindingData(World world, MobEntity mob, Path path, float nodeReachProximity, CallbackInfo ci) {
         if (world instanceof ServerWorld && CeramicSettings.sendServerDebugInfo && path != null) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
@@ -90,22 +125,20 @@ public abstract class DebugInfoSenderMixin {
             buf.writeFloat(nodeReachProximity);
             path.toBuffer(buf);
             sendToNearby((ServerWorld) world, buf, DEBUG_PATH, mob.getBlockPos());
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendNeighborUpdate", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendNeighborUpdate", at = @At("TAIL"))
     private static void sendNeighborUpdate(World world, BlockPos pos, CallbackInfo ci) {
         if (world instanceof ServerWorld && CeramicSettings.sendServerDebugInfo) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeVarLong(world.getTime());
             buf.writeBlockPos(pos);
             sendToNearby((ServerWorld) world, buf, DEBUG_NEIGHBORS_UPDATE, pos);
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendStructureStart", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendStructureStart", at = @At("TAIL"))
     private static void sendStructureStart(StructureWorldAccess world, StructureStart<?> structureStart, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
             ServerWorld serverWorld = world.toServerWorld();
@@ -126,14 +159,13 @@ public abstract class DebugInfoSenderMixin {
                 buf.writeInt(childPiece.getBoundingBox().getMaxX());
                 buf.writeInt(childPiece.getBoundingBox().getMaxY());
                 buf.writeInt(childPiece.getBoundingBox().getMaxZ());
-                buf.writeBoolean(true);
+                buf.writeBoolean(true); // difference renders as blue or green
             }
             sendToNearby(serverWorld, buf, DEBUG_STRUCTURES, structureStart.getBoundingBox().getCenter());
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendGoalSelector", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendGoalSelector", at = @At("TAIL"))
     private static void sendGoalSelector(World world, MobEntity mob, GoalSelector goalSelector, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo && world instanceof ServerWorld) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
@@ -146,11 +178,10 @@ public abstract class DebugInfoSenderMixin {
                 buf.writeString(goal.getGoal().getClass().getSimpleName());
             }
             sendToNearby((ServerWorld) world, buf, DEBUG_GOAL_SELECTOR, mob.getBlockPos());
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendRaids", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendRaids", at = @At("TAIL"))
     private static void sendRaids(ServerWorld world, Collection<Raid> raids, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
@@ -159,16 +190,35 @@ public abstract class DebugInfoSenderMixin {
                 buf.writeBlockPos(raid.getCenter());
             });
             sendToAll(world, buf, DEBUG_RAIDS);
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendBrainDebugData", at = @At("HEAD"), cancellable = true)
-    private static void sendBrainDebugData(LivingEntity living, CallbackInfo ci) {
-
+    @Inject(method = "sendBrainDebugData", at = @At("TAIL"))
+    private static void sendBrainDebugData(LivingEntity entity, CallbackInfo ci) {
+        if (CeramicSettings.sendServerDebugInfo) {
+            // Despite many entities calling sendBrainDebugData, it seems as if it would cause problems, writeBrain also seems to be tuned to only villagers
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeDouble(entity.getX());
+            buf.writeDouble(entity.getY());
+            buf.writeDouble(entity.getZ());
+            buf.writeUuid(entity.getUuid());
+            buf.writeInt(entity.getId()); // entityId
+            buf.writeString(NameGenerator.name(entity.getUuid())); // name
+            if (entity instanceof VillagerEntity) {
+                buf.writeString(((VillagerEntity) entity).getVillagerData().getProfession().toString()); // profession
+                buf.writeInt(((VillagerEntity) entity).getExperience()); // profession
+            } else {
+                buf.writeString("");
+                buf.writeInt(0);
+            }
+            buf.writeFloat(entity.getHealth()); // health
+            buf.writeFloat(entity.getMaxHealth()); // maxHealth
+            writeBrain(entity, buf);
+            sendToNearby((ServerWorld) entity.getWorld(), buf, DEBUG_BRAIN, entity.getBlockPos());
+        }
     }
 
-    @Inject(method = "sendBeeDebugData", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendBeeDebugData", at = @At("TAIL"))
     private static void sendBeeDebugData(BeeEntity bee, CallbackInfo ci) {
         World world = bee.getWorld();
         if (CeramicSettings.sendServerDebugInfo && world instanceof ServerWorld) {
@@ -203,36 +253,40 @@ public abstract class DebugInfoSenderMixin {
             }
             buf.writeVarInt(0);
             sendToNearby((ServerWorld) world, buf, DEBUG_BEE, new BlockPos(bee.getX(), bee.getY(), bee.getZ()));
-            ci.cancel();
         }
     }
 
-    @Inject(method = "sendGameEvent", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendGameEvent", at = @At("TAIL"))
     private static void sendGameEvent(World world, GameEvent event, BlockPos pos, CallbackInfo ci) {
-
+        if (CeramicSettings.sendServerDebugInfo) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeIdentifier(Registry.GAME_EVENT.getId(event));
+            buf.writeBlockPos(pos);
+            sendToNearby((ServerWorld) world, buf, DEBUG_GAME_EVENT, pos);
+        }
     }
 
-    @Inject(method = "sendGameEventListener", at = @At("HEAD"), cancellable = true)
-    private static void sendGameEventListener(World world, GameEventListener eventListener, CallbackInfo ci) {
-
+    @Inject(method = "sendGameEventListener", at = @At("TAIL"))
+    private static void sendGameEventListener(World world, GameEventListener listener, CallbackInfo ci) {
+        if (CeramicSettings.sendServerDebugInfo) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeIdentifier(Registry.POSITION_SOURCE_TYPE.getId(listener.getPositionSource().getType()));
+            PositionSourceType.write(listener.getPositionSource(), buf);
+            sendToAll((ServerWorld) world, buf, DEBUG_GAME_EVENT);
+        }
     }
 
-    @Inject(method = "sendBeeDebugData", at = @At("HEAD"), cancellable = true)
-    private static void sendBeehiveDebugData(BeeEntity bee, CallbackInfo ci) {
-//        // Not ready yet
-//        World world = bee.getWorld();
-//        BlockEntity blockEntity = world.getBlockEntity(bee.getHivePos());
-//        if (CeramicSettings.sendServerDebugInfo && world instanceof ServerWorld && blockEntity instanceof BeehiveBlockEntity) {
-//            BeehiveBlockEntity hive = (BeehiveBlockEntity) blockEntity;
-//            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-//            buf.writeBlockPos(hive.getPos());
-//            // This is not vanilla behavior but I don't know where to get the name for a hive
-//            buf.writeString(hive.getPos().toString());
-//            buf.writeInt(hive.getBeeCount());
-//            buf.writeInt(BeehiveBlockEntity.getHoneyLevel(hive.getCachedState()));
-//            buf.writeBoolean(hive.isSmoked());
-//            sendToNearby((ServerWorld) world, buf, DEBUG_BEE, bee.getHivePos());
-//            ci.cancel();
-//        }
+    @Inject(method = "sendBeehiveDebugData", at = @At("TAIL"))
+    private static void sendBeehiveDebugData(World world, BlockPos pos, BlockState state, BeehiveBlockEntity hive, CallbackInfo ci) {
+        if (CeramicSettings.sendServerDebugInfo) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeBlockPos(pos);
+            // This is likely not vanilla behavior, but I don't know where I would get a name for a hive
+            buf.writeString(hive.getPos().toShortString());
+            buf.writeInt(hive.getBeeCount());
+            buf.writeInt(BeehiveBlockEntity.getHoneyLevel(hive.getCachedState()));
+            buf.writeBoolean(hive.isSmoked());
+            sendToNearby((ServerWorld) world, buf, DEBUG_HIVE, pos);
+        }
     }
 }
