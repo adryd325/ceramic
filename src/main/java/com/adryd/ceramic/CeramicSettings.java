@@ -61,6 +61,12 @@ public class CeramicSettings {
     @Rule(desc = "Send server debug info distance", category = {CREATIVE})
     public static boolean sendServerDebugInfoUnlimitedDistance = false;
 
+    @Rule(desc = "Creepers drop all exploded blocks", category = {GAME_MECHANICS})
+    public static boolean creepersDropBlocks = false;
+
+    @Rule(desc = "Creepers explosion strength is affected by their health", category = {GAME_MECHANICS})
+    public static boolean creepersHealthExplosionStrength = false;
+
     // By mstrodl
     @Rule(desc = "A backport of brigadier#90. Makes stringified NBTs support more JSON-like string escapes", category = {CREATIVE})
     public static boolean allowBrigadierStringEscapes = false;

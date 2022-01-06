@@ -10,6 +10,7 @@
     "EnchantCommandMixin",
     "FarmlandBlockMixin",
     "MinecraftServerMixin",
+    "MixinCreeperEntity",
     "MixinPath",
     "MixinStringReader_brigadier",
     "NoteBlockMixin",
