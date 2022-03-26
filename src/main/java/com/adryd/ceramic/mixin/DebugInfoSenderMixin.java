@@ -123,7 +123,7 @@ public abstract class DebugInfoSenderMixin {
 
     // mojmaps: sendStructurePacket
     @Inject(method = "sendStructureStart", at = @At("TAIL"))
-    private static void sendStructureStart(StructureWorldAccess world, StructureStart<?> structureStart, CallbackInfo ci) {
+    private static void sendStructureStart(StructureWorldAccess world, StructureStart structureStart, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
             ServerWorld serverWorld = world.toServerWorld();
             List<StructurePiece> children = structureStart.getChildren();
