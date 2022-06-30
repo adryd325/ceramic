@@ -256,15 +256,15 @@ public abstract class DebugInfoSenderMixin {
     }
 
     // mojmaps: sendGameEventInfo
-    @Inject(method = "sendGameEvent", at = @At("TAIL"))
-    private static void sendGameEvent(World world, GameEvent event, BlockPos pos, CallbackInfo ci) {
-        if (CeramicSettings.sendServerDebugInfo) {
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeIdentifier(Registry.GAME_EVENT.getId(event));
-            buf.writeBlockPos(pos);
-            sendToNearby((ServerWorld) world, buf, DEBUG_GAME_EVENT, pos, event.getRange());
-        }
-    }
+//    @Inject(method = "sendGameEvent", at = @At("TAIL"))
+//    private static void sendGameEvent(World world, GameEvent event, Vec3d pos, CallbackInfo ci) {
+//        if (CeramicSettings.sendServerDebugInfo) {
+//            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+//            buf.writeIdentifier(Registry.GAME_EVENT.getId(event));
+//            buf.write(pos);
+//            sendToNearby((ServerWorld) world, buf, DEBUG_GAME_EVENT, pos, event.getRange());
+//        }
+//    }
 
     // mojmaps: sendGameEventListenerInfo
     @Inject(method = "sendGameEventListener", at = @At("TAIL"))

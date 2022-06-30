@@ -22,10 +22,14 @@ public class CeramicPreLaunch implements PreLaunchEntrypoint {
     public void onPreLaunch() {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
-            Method m = classLoader.getClass().getMethod("addURL", URL.class);
+            Method m = classLoader.getClass().getMethod("addUrlFwd", URL.class);
             m.setAccessible(true);
             for (String mixinTarget : libraryMixinTargets) {
-                m.invoke(classLoader, getSource(classLoader.getParent().getParent().getParent(), mixinTarget).orElseThrow());
+                try {
+                    m.invoke(classLoader, getSource(classLoader.getParent().getParent().getParent(), mixinTarget).orElseThrow());
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
             }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | NoSuchElementException e) {
             e.printStackTrace();
