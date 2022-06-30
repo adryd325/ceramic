@@ -1,6 +1,5 @@
 plugins {
-	id 'fabric-loom' version '0.10-SNAPSHOT'
-	id "io.github.juuxel.loom-quiltflower-mini" version "1.1.0"
+	id 'fabric-loom' version '0.12-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -24,10 +23,6 @@ repositories {
 	maven {
 		url 'https://masa.dy.fi/maven'
 	}
-}
-
-quiltflower {
-	addToRuntimeClasspath.set(true)
 }
 
 dependencies {

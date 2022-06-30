@@ -14,6 +14,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,7 +29,7 @@ public abstract class NoteBlockMixin extends Block {
     }
 
     @Shadow
-    protected abstract void playNote(World world, BlockPos pos);
+    protected abstract void playNote(@Nullable Entity entity, World world, BlockPos pos);
 
     @Shadow
     @Final
@@ -48,8 +49,8 @@ public abstract class NoteBlockMixin extends Block {
             int note = player.getStackInHand(hand).getCount() - 1;
             if (note <= MAX_NOTE && note >= MIN_NOTE) {
                 world.setBlockState(pos, state.with(NOTE, note), Block.NOTIFY_ALL);
-                this.playNote(world, pos);
-                playNote(world, pos);
+                this.playNote(player, world, pos);
+                playNote(player, world, pos);
                 player.incrementStat(Stats.TUNE_NOTEBLOCK);
                 cir.setReturnValue(ActionResult.CONSUME);
                 cir.cancel();
@@ -59,8 +60,8 @@ public abstract class NoteBlockMixin extends Block {
             int newNote = state.get(NOTE) - 1;
             if (newNote < MIN_NOTE) newNote = MAX_NOTE;
             world.setBlockState(pos, state.with(NOTE, newNote), Block.NOTIFY_ALL);
-            this.playNote(world, pos);
-            playNote(world, pos);
+            this.playNote(player, world, pos);
+            playNote(player, world, pos);
             player.incrementStat(Stats.TUNE_NOTEBLOCK);
             cir.setReturnValue(ActionResult.CONSUME);
             cir.cancel();
@@ -73,7 +74,7 @@ public abstract class NoteBlockMixin extends Block {
     @Override
     public void onLandedUpon(World world, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
         if (CeramicSettings.noteBlocksPlayOnLanding && entity instanceof PlayerEntity) {
-            this.playNote(world, pos);
+            this.playNote(entity, world, pos);
         }
         super.onLandedUpon(world, state, pos, entity, fallDistance);
     }

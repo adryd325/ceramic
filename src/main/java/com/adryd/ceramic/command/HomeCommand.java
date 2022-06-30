@@ -1,6 +1,5 @@
 package com.adryd.ceramic.command;
 
-import carpet.script.language.Sys;
 import carpet.settings.SettingsManager;
 import com.adryd.ceramic.CeramicSettings;
 import com.adryd.ceramic.mixin.SpawnLocatingAccessor;
@@ -17,7 +16,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.tag.BlockTags;
-import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
@@ -138,7 +137,7 @@ public class HomeCommand {
             teleportSpawn(server, player);
         }
 
-        source.sendFeedback(new LiteralText("Teleported you home!"), false);
+        source.sendFeedback(Text.literal("Teleported you home!"), false);
         return 1;
     }
 }

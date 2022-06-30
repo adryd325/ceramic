@@ -10,6 +10,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.ServerCommandSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +56,7 @@ public class Ceramic implements CarpetExtension, ModInitializer {
         ceramicSettingsManager.parseSettingsClass(CeramicSettings.class);
     }
     @Override
-    public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher) {
+    public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, final CommandRegistryAccess commandBuildContext) {
         ModsCommand.register(dispatcher);
         HomeCommand.register(dispatcher);
     }

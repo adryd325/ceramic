@@ -19,10 +19,10 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class ModsCommand {
     public static Text getInformationText(ModMetadata modMeta) {
-        return Texts.bracketed(new LiteralText(modMeta.getId())).styled((style) -> {
+        return Texts.bracketed(Text.literal(modMeta.getId())).styled((style) -> {
             Style temp = style.withColor(Formatting.GREEN)
                     .withInsertion(StringArgumentType.escapeIfRequired(modMeta.getName()))
-                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (new LiteralText("")).append(modMeta.getName()).append("\n").append(modMeta.getVersion().toString())));
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, (Text.literal("")).append(modMeta.getName()).append("\n").append(modMeta.getVersion().toString())));
             if (modMeta.getContact().get("sources").isPresent()) {
                 return temp.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, modMeta.getContact().get("sources").get()));
             }
@@ -73,8 +73,8 @@ public class ModsCommand {
         });
 
         source.sendFeedback(
-                new LiteralText("There are " + mods.size() + " mods loaded" + (showAll ? "" : "*") + ": ")
-                        .append(Texts.join(mods, new LiteralText(", ")))
+                Text.literal("There are " + mods.size() + " mods loaded" + (showAll ? "" : "*") + ": ")
+                        .append(Texts.join(mods, Text.literal(", ")))
                 , false);
         return 1;
     }

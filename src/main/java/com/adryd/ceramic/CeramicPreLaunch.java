@@ -6,6 +6,7 @@ import net.fabricmc.loader.impl.util.UrlUtil;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -31,12 +32,12 @@ public class CeramicPreLaunch implements PreLaunchEntrypoint {
         }
     }
 
-    private static Optional<URL> getSource(ClassLoader loader, String filename) {
+    private static Optional<URL> getSource(ClassLoader loader, String filename) throws MalformedURLException {
         URL url;
 
         if ((url = loader.getResource(filename)) != null) {
             try {
-                URL urlSource = UrlUtil.getSource(filename, url);
+                URL urlSource = UrlUtil.asUrl(UrlUtil.getCodeSource(url, filename));
                 return Optional.of(urlSource);
             } catch (UrlConversionException e) {
                 e.printStackTrace();

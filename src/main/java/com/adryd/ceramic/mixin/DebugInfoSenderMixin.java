@@ -4,7 +4,6 @@ import com.adryd.ceramic.CeramicSettings;
 import io.netty.buffer.Unpooled;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BeehiveBlockEntity;
-import net.minecraft.client.render.debug.NameGenerator;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.PrioritizedGoal;
@@ -131,7 +130,7 @@ public abstract class DebugInfoSenderMixin {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
 
             // Funny naming in yarn but I think this is what we want
-            buf.writeIdentifier(serverWorld.getDimension().getEffects());
+            buf.writeIdentifier(serverWorld.getDimension().effects());
 
             // BlockBox
             buf.writeInt(structureStart.getBoundingBox().getMinX());
@@ -202,7 +201,7 @@ public abstract class DebugInfoSenderMixin {
             buf.writeDouble(entity.getZ());
             buf.writeUuid(entity.getUuid());
             buf.writeInt(entity.getId()); // entityId
-            buf.writeString(NameGenerator.name(entity.getUuid())); // name
+            buf.writeString(entity.getUuid().toString()); // name
             if (entity instanceof VillagerEntity) {
                 buf.writeString(((VillagerEntity) entity).getVillagerData().getProfession().toString()); // profession
                 buf.writeInt(((VillagerEntity) entity).getExperience()); // profession
