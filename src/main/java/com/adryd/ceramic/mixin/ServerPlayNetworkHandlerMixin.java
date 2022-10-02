@@ -20,10 +20,11 @@ public class ServerPlayNetworkHandlerMixin {
      * @author adryd
      * @reason Prevent players from being kicked from command spam
      */
-    @Inject(method = "handleMessage", at = @At(value = "TAIL"))
+    @Inject(method = "checkForSpam", at = @At(value = "HEAD"), cancellable = true)
     private void handleMessage(CallbackInfo ci) {
         if (CeramicSettings.disableMessageCooldown) {
             this.messageCooldown = 0;
+            ci.cancel();
         }
     }
 

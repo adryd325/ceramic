@@ -2,7 +2,7 @@ package com.adryd.ceramic;
 
 import carpet.CarpetExtension;
 import carpet.CarpetServer;
-import carpet.settings.SettingsManager;
+import carpet.api.settings.SettingsManager;
 import com.adryd.ceramic.command.HomeCommand;
 import com.adryd.ceramic.command.ModsCommand;
 import com.mojang.brigadier.CommandDispatcher;
@@ -14,6 +14,8 @@ import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.server.command.ServerCommandSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Map;
 
 public class Ceramic implements CarpetExtension, ModInitializer {
     private static final String MOD_ID = "ceramic";
@@ -31,6 +33,11 @@ public class Ceramic implements CarpetExtension, ModInitializer {
     }
 
     public static final Logger logger = LogManager.getLogger(MOD_ID);
+
+    public static void loadExtension()
+    {
+        CarpetServer.manageExtension(new Ceramic());
+    }
 
     @Override
     public String version() {
@@ -61,7 +68,9 @@ public class Ceramic implements CarpetExtension, ModInitializer {
         HomeCommand.register(dispatcher);
     }
 
-    public SettingsManager customSettingsManager() {
-        return ceramicSettingsManager;
+    @Override
+    public Map<String, String> canHasTranslations(String lang)
+    {
+        return CeramicTranslations.getTranslationFromResourcePath(lang);
     }
 }
