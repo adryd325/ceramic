@@ -21,23 +21,15 @@ public class Ceramic implements CarpetExtension, ModInitializer {
     private static final String MOD_ID = "ceramic";
     private static final String MOD_NAME;
     private static final Version MOD_VERSION;
-
-    private static final SettingsManager ceramicSettingsManager;
     private static final FabricLoader loader = FabricLoader.getInstance();
 
     static {
         ModMetadata metadata = loader.getModContainer(MOD_ID).orElseThrow(RuntimeException::new).getMetadata();
         MOD_NAME = metadata.getName();
         MOD_VERSION = metadata.getVersion();
-        ceramicSettingsManager = new SettingsManager(MOD_VERSION.getFriendlyString(), MOD_ID, MOD_NAME);
     }
 
     public static final Logger logger = LogManager.getLogger(MOD_ID);
-
-    public static void loadExtension()
-    {
-        CarpetServer.manageExtension(new Ceramic());
-    }
 
     @Override
     public String version() {
@@ -60,7 +52,7 @@ public class Ceramic implements CarpetExtension, ModInitializer {
 
     @Override
     public void onGameStarted() {
-        ceramicSettingsManager.parseSettingsClass(CeramicSettings.class);
+        CarpetServer.settingsManager.parseSettingsClass(CeramicSettings.class);
     }
     @Override
     public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, final CommandRegistryAccess commandBuildContext) {
