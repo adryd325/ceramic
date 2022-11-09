@@ -2,7 +2,6 @@ package com.adryd.ceramic;
 
 import carpet.CarpetExtension;
 import carpet.CarpetServer;
-import carpet.api.settings.SettingsManager;
 import com.adryd.ceramic.command.HomeCommand;
 import com.adryd.ceramic.command.ModsCommand;
 import com.mojang.brigadier.CommandDispatcher;
@@ -54,6 +53,7 @@ public class Ceramic implements CarpetExtension, ModInitializer {
     public void onGameStarted() {
         CarpetServer.settingsManager.parseSettingsClass(CeramicSettings.class);
     }
+
     @Override
     public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, final CommandRegistryAccess commandBuildContext) {
         ModsCommand.register(dispatcher);
@@ -61,8 +61,7 @@ public class Ceramic implements CarpetExtension, ModInitializer {
     }
 
     @Override
-    public Map<String, String> canHasTranslations(String lang)
-    {
+    public Map<String, String> canHasTranslations(String lang) {
         return CeramicTranslations.getTranslationFromResourcePath(lang);
     }
 }

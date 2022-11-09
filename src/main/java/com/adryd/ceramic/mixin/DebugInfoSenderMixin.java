@@ -267,7 +267,7 @@ public abstract class DebugInfoSenderMixin {
 //    }
 
     // mojmaps: sendGameEventListenerInfo
-    @Inject(method = "sendGameEventListener", at = @At("TAIL"))
+        @Inject(method = "sendGameEventListener", at = @At("TAIL"))
     private static void sendGameEventListener(World world, GameEventListener listener, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());

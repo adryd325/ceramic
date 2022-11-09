@@ -9,6 +9,7 @@
     "DedicatedPlayerManagerMixin",
     "EnchantCommandMixin",
     "FarmlandBlockMixin",
+    "ItemStackMixin",
     "MinecraftServerMixin",
     "MixinCreeperEntity",
     "MixinPath",
