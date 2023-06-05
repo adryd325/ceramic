@@ -66,8 +66,4 @@ public class CeramicSettings {
 
     @Rule(categories = {GAME_MECHANICS})
     public static boolean creepersHealthExplosionStrength = false;
-
-    // By mstrodl
-    @Rule(categories = {CREATIVE})
-    public static boolean allowBrigadierStringEscapes = false;
 }

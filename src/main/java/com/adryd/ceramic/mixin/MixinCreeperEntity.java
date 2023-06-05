@@ -15,15 +15,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(CreeperEntity.class)
 public class MixinCreeperEntity {
     // I really wish I didn't have to redirect here, but I can't figure out @ModifyVariable for the life of me
-    @Redirect(method = "explode", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/world/explosion/Explosion$DestructionType;)Lnet/minecraft/world/explosion/Explosion;"))
-    private Explosion modifyDestroyType(World instance, Entity entity, double x, double y, double z, float power, Explosion.DestructionType destructionType) {
+    @Redirect(method = "explode", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;createExplosion(Lnet/minecraft/entity/Entity;DDDFLnet/minecraft/world/World$ExplosionSourceType;)Lnet/minecraft/world/explosion/Explosion;"))
+    private Explosion modifyDestroyType(World instance, Entity entity, double x, double y, double z, float power, World.ExplosionSourceType explosionSourceType) {
         if (CeramicSettings.creepersHealthExplosionStrength) {
             power *= ((LivingEntity) entity).getHealth() / ((LivingEntity) entity).getMaxHealth() ;
         }
-        if (CeramicSettings.creepersDropBlocks && destructionType == Explosion.DestructionType.DESTROY) {
-            destructionType = Explosion.DestructionType.BREAK;
+        if (CeramicSettings.creepersDropBlocks && explosionSourceType == World.ExplosionSourceType.MOB) {
+            explosionSourceType = World.ExplosionSourceType.TNT;
         }
 
-        return instance.createExplosion(entity,x,y,z,power,destructionType);
+        return instance.createExplosion(entity,x,y,z,power,explosionSourceType);
     }
 }

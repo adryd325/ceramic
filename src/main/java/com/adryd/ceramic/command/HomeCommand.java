@@ -1,6 +1,8 @@
 package com.adryd.ceramic.command;
 
 import carpet.settings.SettingsManager;
+import carpet.utils.CommandHelper;
+import com.adryd.ceramic.Ceramic;
 import com.adryd.ceramic.CeramicSettings;
 import com.adryd.ceramic.mixin.SpawnLocatingAccessor;
 import com.mojang.brigadier.CommandDispatcher;
@@ -10,12 +12,13 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.network.packet.s2c.play.PositionFlag;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.tag.BlockTags;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -34,14 +37,14 @@ public class HomeCommand {
     }
 
     private static void teleport(ServerPlayerEntity player, ServerWorld targetWorld, double x, double y, double z, float yaw, float pitch) {
-        ChunkPos chunkPos = new ChunkPos(new BlockPos(x, y, z));
+        ChunkPos chunkPos = new ChunkPos(new BlockPos((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z)));
         targetWorld.getChunkManager().addTicket(ChunkTicketType.POST_TELEPORT, chunkPos, 1, player.getId());
         player.stopRiding();
         if (player.isSleeping()) {
             player.wakeUp(true, true);
         }
-        if (targetWorld == player.world) {
-            player.networkHandler.requestTeleport(x, y, z, yaw, pitch, EnumSet.noneOf(PlayerPositionLookS2CPacket.Flag.class));
+        if (targetWorld == player.getWorld()) {
+            player.networkHandler.requestTeleport(x, y, z, yaw, pitch, EnumSet.noneOf(PositionFlag.class));
         } else {
             player.teleport(targetWorld, x, y, z, yaw, pitch);
         }
@@ -123,7 +126,7 @@ public class HomeCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         LiteralArgumentBuilder<ServerCommandSource> command = literal("home")
-                .requires((player) -> SettingsManager.canUseCommand(player, CeramicSettings.commandHome))
+                .requires((player) -> CommandHelper.canUseCommand(player, CeramicSettings.commandHome))
                 .executes((context) -> execute(context.getSource()));
         dispatcher.register(command);
     }
@@ -137,7 +140,7 @@ public class HomeCommand {
             teleportSpawn(server, player);
         }
 
-        source.sendFeedback(Text.literal("Teleported you home!"), false);
+        source.sendFeedback(() -> Text.literal("Teleported you home!"), false);
         return 1;
     }
 }

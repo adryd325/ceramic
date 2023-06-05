@@ -13,6 +13,7 @@ import net.minecraft.entity.passive.BeeEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.network.packet.s2c.play.CustomPayloadS2CPacket;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.DebugInfoSender;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -22,11 +23,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.village.raid.Raid;
 import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.event.PositionSourceType;
 import net.minecraft.world.event.listener.GameEventListener;
 import org.spongepowered.asm.mixin.Mixin;
@@ -251,7 +250,7 @@ public abstract class DebugInfoSenderMixin {
                 buf.writeString(memory);
             }
             buf.writeVarInt(0);
-            sendToNearby((ServerWorld) world, buf, DEBUG_BEE, new BlockPos(bee.getX(), bee.getY(), bee.getZ()), 30);
+            sendToNearby((ServerWorld) world, buf, DEBUG_BEE, new BlockPos((int) bee.getX(), (int) bee.getY(), (int) bee.getZ()), 30);
         }
     }
 
@@ -271,7 +270,7 @@ public abstract class DebugInfoSenderMixin {
     private static void sendGameEventListener(World world, GameEventListener listener, CallbackInfo ci) {
         if (CeramicSettings.sendServerDebugInfo) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeIdentifier(Registry.POSITION_SOURCE_TYPE.getId(listener.getPositionSource().getType()));
+            buf.writeIdentifier(Registries.POSITION_SOURCE_TYPE.getId(listener.getPositionSource().getType()));
             PositionSourceType.write(listener.getPositionSource(), buf);
             sendToAll((ServerWorld) world, buf, DEBUG_GAME_EVENT_LISTENERS);
         }

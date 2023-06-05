@@ -47,7 +47,7 @@ public class MixinPath {
         buf.writeInt(currentNodeIndex);
         if (debugTargetNodes != null) {
             buf.writeInt(debugTargetNodes.size());
-            debugTargetNodes.forEach(target -> target.toBuffer(buf));
+            debugTargetNodes.forEach(target -> target.write(buf));
         } else {
             buf.writeInt(0);
         }
@@ -56,15 +56,15 @@ public class MixinPath {
         buf.writeInt(target.getZ());
         buf.writeInt(nodes.size());
         for (PathNode pathNode : nodes) {
-            pathNode.toBuffer(buf);
+            pathNode.write(buf);
         }
         buf.writeInt(debugNodes.length);
         for (PathNode pathNode2 : debugNodes) {
-            pathNode2.toBuffer(buf);
+            pathNode2.write(buf);
         }
         buf.writeInt(debugSecondNodes.length);
         for (PathNode pathNode2 : this.debugSecondNodes) {
-            pathNode2.toBuffer(buf);
+            pathNode2.write(buf);
         }
         ci.cancel();
     }

@@ -1,6 +1,7 @@
 package com.adryd.ceramic.command;
 
 import carpet.settings.SettingsManager;
+import carpet.utils.CommandHelper;
 import com.adryd.ceramic.CeramicSettings;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -46,7 +47,7 @@ public class ModsCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         LiteralArgumentBuilder<ServerCommandSource> command = literal("mods")
-                .requires((player) -> SettingsManager.canUseCommand(player, CeramicSettings.commandMods))
+                .requires((player) -> CommandHelper.canUseCommand(player, CeramicSettings.commandMods))
                 .then(CommandManager.literal("all").executes((context) -> execute(context.getSource(), true)))
                 .executes((context) -> execute(context.getSource(), false));
         dispatcher.register(command);
@@ -73,7 +74,7 @@ public class ModsCommand {
         });
 
         source.sendFeedback(
-                Text.literal("There are " + mods.size() + " mods loaded" + (showAll ? "" : "*") + ": ")
+                () -> Text.literal("There are " + mods.size() + " mods loaded" + (showAll ? "" : "*") + ": ")
                         .append(Texts.join(mods, Text.literal(", ")))
                 , false);
         return 1;

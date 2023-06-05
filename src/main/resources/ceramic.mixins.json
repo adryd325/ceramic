@@ -13,15 +13,12 @@
     "MinecraftServerMixin",
     "MixinCreeperEntity",
     "MixinPath",
-    "MixinStringReader_brigadier",
     "NoteBlockMixin",
     "PlayerManagerAccessor",
     "PlayerManagerMixin",
     "ServerPlayNetworkHandlerMixin",
     "SpawnLocatingAccessor",
     "TurtleEggBlockMixin"
-  ],
-  "client": [
   ],
   "injectors": {
     "defaultRequire": 1

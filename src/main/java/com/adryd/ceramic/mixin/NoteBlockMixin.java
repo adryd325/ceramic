@@ -29,11 +29,10 @@ public abstract class NoteBlockMixin extends Block {
     }
 
     @Shadow
-    protected abstract void playNote(@Nullable Entity entity, World world, BlockPos pos);
-
-    @Shadow
     @Final
     public static IntProperty NOTE;
+
+    @Shadow protected abstract void playNote(@Nullable Entity entity, BlockState state, World world, BlockPos pos);
 
     // Can't figure out how to get these properly so Whoops you're hardcoded now.
     public final int MAX_NOTE = 24;
@@ -48,9 +47,9 @@ public abstract class NoteBlockMixin extends Block {
         if (CeramicSettings.noteBlocksTuneWithSticks && player.isHolding(Items.STICK)) {
             int note = player.getStackInHand(hand).getCount() - 1;
             if (note <= MAX_NOTE && note >= MIN_NOTE) {
-                world.setBlockState(pos, state.with(NOTE, note), Block.NOTIFY_ALL);
-                this.playNote(player, world, pos);
-                playNote(player, world, pos);
+                BlockState newState = state.with(NOTE, note);
+                world.setBlockState(pos, newState, Block.NOTIFY_ALL);
+                this.playNote(player, newState, world, pos);
                 player.incrementStat(Stats.TUNE_NOTEBLOCK);
                 cir.setReturnValue(ActionResult.CONSUME);
                 cir.cancel();
@@ -59,9 +58,9 @@ public abstract class NoteBlockMixin extends Block {
         if (CeramicSettings.noteBlocksTuneBackwards && player.isSneaking()) {
             int newNote = state.get(NOTE) - 1;
             if (newNote < MIN_NOTE) newNote = MAX_NOTE;
-            world.setBlockState(pos, state.with(NOTE, newNote), Block.NOTIFY_ALL);
-            this.playNote(player, world, pos);
-            playNote(player, world, pos);
+            BlockState newState = state.with(NOTE, newNote);
+            world.setBlockState(pos, newState, Block.NOTIFY_ALL);
+            this.playNote(player, newState, world, pos);
             player.incrementStat(Stats.TUNE_NOTEBLOCK);
             cir.setReturnValue(ActionResult.CONSUME);
             cir.cancel();
@@ -74,7 +73,7 @@ public abstract class NoteBlockMixin extends Block {
     @Override
     public void onLandedUpon(World world, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
         if (CeramicSettings.noteBlocksPlayOnLanding && entity instanceof PlayerEntity) {
-            this.playNote(entity, world, pos);
+            this.playNote(entity, state, world, pos);
         }
         super.onLandedUpon(world, state, pos, entity, fallDistance);
     }

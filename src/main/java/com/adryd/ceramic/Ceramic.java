@@ -2,6 +2,7 @@ package com.adryd.ceramic;
 
 import carpet.CarpetExtension;
 import carpet.CarpetServer;
+import carpet.api.settings.SettingsManager;
 import com.adryd.ceramic.command.HomeCommand;
 import com.adryd.ceramic.command.ModsCommand;
 import com.mojang.brigadier.CommandDispatcher;
@@ -17,6 +18,8 @@ import org.apache.logging.log4j.Logger;
 import java.util.Map;
 
 public class Ceramic implements CarpetExtension, ModInitializer {
+
+    public static final SettingsManager settingsManager;
     private static final String MOD_ID = "ceramic";
     private static final String MOD_NAME;
     private static final Version MOD_VERSION;
@@ -26,6 +29,7 @@ public class Ceramic implements CarpetExtension, ModInitializer {
         ModMetadata metadata = loader.getModContainer(MOD_ID).orElseThrow(RuntimeException::new).getMetadata();
         MOD_NAME = metadata.getName();
         MOD_VERSION = metadata.getVersion();
+        settingsManager = new SettingsManager(MOD_VERSION.getFriendlyString(), MOD_ID, MOD_NAME);
     }
 
     public static final Logger logger = LogManager.getLogger(MOD_ID);
@@ -51,11 +55,13 @@ public class Ceramic implements CarpetExtension, ModInitializer {
 
     @Override
     public void onGameStarted() {
-        CarpetServer.settingsManager.parseSettingsClass(CeramicSettings.class);
+        settingsManager.parseSettingsClass(CeramicSettings.class);
     }
 
     @Override
     public void registerCommands(CommandDispatcher<ServerCommandSource> dispatcher, final CommandRegistryAccess commandBuildContext) {
+        settingsManager.registerCommand(dispatcher, commandBuildContext);
+
         ModsCommand.register(dispatcher);
         HomeCommand.register(dispatcher);
     }
